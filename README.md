@@ -4,7 +4,7 @@
 
 ## 1. Context and Objective
 
-The **CoRoute** project is a ride-sharing web application inspired by BlaBlaCar, designed to connect drivers and passengers for intercity trips.
+The **Coroute** project is a ride-sharing web application inspired by BlaBlaCar, designed to connect drivers and passengers for intercity trips.
 
 ###  Main Objective (MVP)
 
