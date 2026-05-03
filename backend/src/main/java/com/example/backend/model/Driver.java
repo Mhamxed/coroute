@@ -1,4 +1,4 @@
-package com.spring.models;
+package com.example.backend.model;
 
 import jakarta.persistence.*;
 
