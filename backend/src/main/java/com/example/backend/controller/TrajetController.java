@@ -1,5 +1,7 @@
 package com.example.backend.controller;
+
 import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.example.backend.model.Trajet;
 import com.example.backend.service.TrajetService;
-
 
 @RestController
 @RequestMapping("/api/trips")
@@ -26,36 +28,36 @@ public class TrajetController {
 
     @PostMapping
     public ResponseEntity<Integer> create(@RequestBody Trajet t) {
-        int id = service.create(t);
-        return ResponseEntity.ok(id);
+        return ResponseEntity.ok(service.create(t));
     }
 
     @GetMapping("/{id}")
-    public Trajet get(@PathVariable int id) {
-        return service.get(id);
+    public ResponseEntity<Trajet> get(@PathVariable int id) {
+        return ResponseEntity.ok(service.get(id));
     }
 
     @GetMapping("/search")
-    public List<Trajet> search(
-        @RequestParam String origin,
-        @RequestParam String destination
-    ) {
-        return service.search(origin, destination);
+    public ResponseEntity<List<Trajet>> search(
+            @RequestParam String origin,
+            @RequestParam String destination) {
+        return ResponseEntity.ok(service.search(origin, destination));
     }
 
     @GetMapping("/driver/{driverId}")
-    public List<Trajet> driverTrips(@PathVariable int driverId) {
-        return service.driverTrips(driverId);
+    public ResponseEntity<List<Trajet>> driverTrips(@PathVariable int driverId) {
+        return ResponseEntity.ok(service.driverTrips(driverId));
     }
 
     @PutMapping("/{id}")
-    public void update(@PathVariable int id, @RequestBody Trajet t) {
+    public ResponseEntity<Void> update(@PathVariable int id, @RequestBody Trajet t) {
         t.setId(id);
         service.update(t);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public void cancel(@PathVariable int id) {
+    public ResponseEntity<Void> cancel(@PathVariable int id) {
         service.cancel(id);
+        return ResponseEntity.noContent().build();
     }
 }

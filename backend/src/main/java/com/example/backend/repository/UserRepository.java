@@ -72,4 +72,30 @@ public class UserRepository {
         );
         return results.stream().findFirst();
     }
+
+    public int update(User user) {
+        return jdbcTemplate.update("""
+            UPDATE users
+            SET first_name = ?, last_name = ?, phone = ?, bio = ?, avatar_url = ?
+            WHERE id = ?
+        """,
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhone(),
+                user.getBio(),
+                user.getAvatarUrl(),
+                user.getId()
+        );
+    }
+
+    public int updatePassword(int userId, String newPasswordHash) {
+        return jdbcTemplate.update("""
+            UPDATE users
+            SET password_hash = ?
+            WHERE id = ?
+        """,
+                newPasswordHash,
+                userId
+        );
+    }
 }
