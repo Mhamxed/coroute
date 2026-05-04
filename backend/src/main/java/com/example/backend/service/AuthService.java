@@ -4,7 +4,9 @@ import com.example.backend.dto.AuthRequest;
 import com.example.backend.dto.AuthResponse;
 import com.example.backend.dto.RegisterRequest;
 import com.example.backend.model.User;
+import com.example.backend.model.Vehicule;
 import com.example.backend.repository.AdminRepository;
+import com.example.backend.repository.VehiculeRepository;
 import com.example.backend.repository.DriverRepository;
 import com.example.backend.repository.PassengerRepository;
 import com.example.backend.repository.UserRepository;
@@ -20,6 +22,7 @@ public class AuthService {
     private final DriverRepository driverRepository;
     private final PassengerRepository passengerRepository;
     private final AdminRepository adminRepository;
+    private final VehiculeRepository vehiculeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -27,12 +30,14 @@ public class AuthService {
                        DriverRepository driverRepository,
                        PassengerRepository passengerRepository,
                        AdminRepository adminRepository,
+                       VehiculeRepository vehiculeRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.driverRepository = driverRepository;
         this.passengerRepository = passengerRepository;
         this.adminRepository = adminRepository;
+        this.vehiculeRepository = vehiculeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -59,7 +64,12 @@ public class AuthService {
         int userId = userRepository.create(user);
 
         switch (role) {
-            case "DRIVER" -> driverRepository.create(userId, req.getLicenceNumber(), req.getVehiclePlate());
+            case "DRIVER" -> {
+                Vehicule v = new Vehicule();
+                v.setPlateNumber(req.getVehiclePlate());
+                vehiculeRepository.create(v);
+                driverRepository.create(userId, req.getLicenceNumber(), req.getVehiclePlate());
+            }
             case "PASSENGER" -> passengerRepository.create(userId);
             case "ADMIN" -> adminRepository.create(userId);
         }
