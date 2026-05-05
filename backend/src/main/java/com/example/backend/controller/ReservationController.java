@@ -16,7 +16,7 @@ import com.example.backend.service.ReservationService;
 @RestController
 @RequestMapping(”/api/reservations”)
 public class ReservationController {
-
+    
 private final ReservationService service;
 
 public ReservationController(ReservationService service) {
@@ -58,5 +58,6 @@ public void refuser(@PathVariable int id) {
 public void annuler(@PathVariable int id) {
     service.annuler(id);
 }
+
 
 }
