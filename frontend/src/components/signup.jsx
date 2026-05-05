@@ -1,170 +1,161 @@
-import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, ArrowRight, Car, User } from 'lucide-react';
 import Axios from "axios";
 import { useContext, useState } from "react";
-import { NotificationContext } from '../App';
+import { NotificationContext, UserContext } from '../App';
+import { motion } from "framer-motion";
+
 const API = import.meta.env.VITE_SERVER_URL;
 
-const Signup = () => {
-    const [showPassword, setShowPassword] = useState(false);
-    const { setNotification, closeNotification } = useContext(NotificationContext)
-    const navigate = useNavigate()
+export default function Signup() {
+  const [form, setForm] = useState({
+    email: "", password: "", firstName: "", lastName: "",
+    phone: "", role: "PASSENGER", licenceNumber: "", vehiclePlate: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { refreshUser, setrRefreshUser } = useContext(UserContext);
+  const { setNotification, closeNotification } = useContext(NotificationContext);
+  const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        phone: '',
-        email: '',
-        password: '',
-        role: 'PASSENGER',
-        licenceNumber: '',
-        vehiclePlate: '',
-        agreeToTerms: false
-    });
+  const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    const handleSignUp = async (e) => {
-        e.preventDefault()
-        try {
-            const res = await Axios.post(`${API}/api/auth/register`, {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                phone: formData.phone,
-                email: formData.email,
-                password: formData.password,
-                role: formData.role,
-                licenceNumber: formData.role === 'DRIVER' ? formData.licenceNumber : null,
-                vehiclePlate: formData.role === 'DRIVER' ? formData.vehiclePlate : null,
-            }, { withCredentials: true })
-
-            // On success, backend returns token directly — store and redirect
-            localStorage.setItem("user", JSON.stringify(res.data));
-            localStorage.setItem("token", res.data.token);
-            navigate("/login")
-        } catch(err) {
-            setNotification({
-                message: err.response?.data?.message || "Registration failed",
-                type: "error",
-                onClose: closeNotification
-            })
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await Axios.post(`${API}/api/auth/register`, form);
+      localStorage.setItem("user", JSON.stringify(res.data));
+      localStorage.setItem("token", res.data.token);
+      setrRefreshUser(!refreshUser);
+      navigate("/");
+    } catch (err) {
+      setNotification({
+        message: err.response?.data?.error || "Registration failed",
+        type: "error",
+        onClose: closeNotification,
+      });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className='w-screen h-screen flex flex-col justify-center items-center'>
-            <div className="flex justify-center items-center my-5 max-h-screen">
-                <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-                    <div className="relative h-16 bg-gradient-to-r from-lime-600 to-lime-800">
-                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-lime-700 rounded-full p-3 shadow-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+  const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-transparent transition-all";
+  const labelClass = "block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5";
 
-                    <div className="px-6 pt-12 pb-8">
-                        <h2 className="text-center text-xl font-bold text-gray-800 mb-8">Create Your Account</h2>
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-md"
+      >
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 mb-8 justify-center">
+          <div className="w-9 h-9 bg-lime-500 rounded-xl flex items-center justify-center">
+            <span className="text-white font-black" style={{ fontFamily: "'Syne', sans-serif" }}>C</span>
+          </div>
+          <span className="font-black text-gray-900 text-xl" style={{ fontFamily: "'Syne', sans-serif" }}>Coroute</span>
+        </Link>
 
-                        <form onSubmit={handleSignUp}>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                    <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                                </div>
-                                <div>
-                                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                    <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                                </div>
-                            </div>
+        <div className="bg-white rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 p-8">
+          <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>Create account</h1>
+          <p className="text-gray-500 text-sm mb-6">Already have one? <Link to="/login" className="text-lime-600 font-semibold hover:text-lime-700">Sign in</Link></p>
 
-                            <div className="mb-4">
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" />
-                            </div>
-
-                            <div className="mb-4">
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input type="email" id="email" name="email" value={formData.email} onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                            </div>
-
-                            <div className="mb-4">
-                                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
-                                <select id="role" name="role" value={formData.role} onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500">
-                                    <option value="PASSENGER">Passenger</option>
-                                    <option value="DRIVER">Driver</option>
-                                </select>
-                            </div>
-
-                            {/* Driver-only fields */}
-                            {formData.role === 'DRIVER' && (
-                                <div className="mb-4 grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="licenceNumber" className="block text-sm font-medium text-gray-700 mb-1">Licence Number</label>
-                                        <input type="text" id="licenceNumber" name="licenceNumber" value={formData.licenceNumber} onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700 mb-1">Vehicle Plate</label>
-                                        <input type="text" id="vehiclePlate" name="vehiclePlate" value={formData.vehiclePlate} onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                                <div className="relative">
-                                    <input type={showPassword ? "text" : "password"} id="password" name="password"
-                                        value={formData.password} onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500" required />
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                                <p className="mt-1 text-xs text-gray-500">Password must be at least 8 characters long</p>
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="flex items-center">
-                                    <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange}
-                                        className="h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300 rounded" required />
-                                    <span className="ml-2 text-sm text-gray-600">
-                                        I agree to the <a href="#" className="text-lime-600 hover:text-lime-800">Terms of Service</a> and <a href="#" className="text-lime-600 hover:text-lime-800">Privacy Policy</a>
-                                    </span>
-                                </label>
-                            </div>
-
-                            <button type="submit"
-                                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-medium py-3 px-4 rounded-md transition duration-150 ease-in-out">
-                                Sign Up
-                            </button>
-                        </form>
-
-                        <div className="mt-6 text-center">
-                            <p className="text-sm text-gray-600">
-                                Already have an account? <Link to={"/login"} className="text-lime-600 hover:text-lime-800 font-medium">Log in</Link>
-                            </p>
-                        </div>
-                    </div>
+          {/* Role picker */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {[
+              { value: "PASSENGER", label: "I'm a passenger", icon: User, desc: "Find and book trips" },
+              { value: "DRIVER", label: "I'm a driver", icon: Car, desc: "Offer seats in my car" },
+            ].map(({ value, label, icon: Icon, desc }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, role: value }))}
+                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                  form.role === value
+                    ? "border-lime-500 bg-lime-50"
+                    : "border-gray-100 bg-gray-50 hover:border-gray-200"
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${form.role === value ? "bg-lime-500" : "bg-gray-200"}`}>
+                  <Icon size={15} className={form.role === value ? "text-white" : "text-gray-500"} />
                 </div>
-            </div>
-        </div>
-    );
-};
+                <p className={`text-xs font-bold ${form.role === value ? "text-lime-700" : "text-gray-700"}`}>{label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+              </button>
+            ))}
+          </div>
 
-export default Signup;
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>First name</label>
+                <input type="text" value={form.firstName} onChange={set("firstName")} placeholder="Youssef" required className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Last name</label>
+                <input type="text" value={form.lastName} onChange={set("lastName")} placeholder="Alami" required className={inputClass} />
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Email</label>
+              <input type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" required className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass}>Phone</label>
+              <input type="tel" value={form.phone} onChange={set("phone")} placeholder="06 00 00 00 00" required className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass}>Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={set("password")}
+                  placeholder="••••••••"
+                  required
+                  className={`${inputClass} pr-12`}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Driver-only fields */}
+            {form.role === "DRIVER" && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 pt-2 border-t border-gray-100"
+              >
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider pt-2">Driver details</p>
+                <div>
+                  <label className={labelClass}>Licence number</label>
+                  <input type="text" value={form.licenceNumber} onChange={set("licenceNumber")} placeholder="LIC-000000" required className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Vehicle plate</label>
+                  <input type="text" value={form.vehiclePlate} onChange={set("vehiclePlate")} placeholder="AB-123-CD" required className={inputClass} />
+                </div>
+              </motion.div>
+            )}
+
+            <button type="submit" disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-lime-500 hover:bg-lime-600 text-white font-bold py-3.5 rounded-2xl text-sm transition-all duration-200 shadow-md shadow-lime-200 disabled:opacity-60 mt-2 cursor-pointer">
+              {loading ? "Creating account..." : "Create account"}
+              {!loading && <ArrowRight size={16} />}
+            </button>
+          </form>
+        </div>
+      </motion.div>
+    </div>
+  );
+}

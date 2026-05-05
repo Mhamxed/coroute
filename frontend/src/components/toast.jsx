@@ -1,37 +1,27 @@
+// Toast.jsx
 import { useEffect } from 'react';
-import { Ban, X } from 'lucide-react';
+import { X, CheckCircle, AlertCircle } from 'lucide-react';
 
-// Simple Toast Notification Component
-const Toast = ({ message, type, onClose }) => {
-
+export const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-        onClose();
-    }, 3000); // Auto dismiss after 5 seconds
-
-    return () => clearTimeout(timer);
+    const t = setTimeout(onClose, 3500);
+    return () => clearTimeout(t);
   }, [onClose]);
 
-  const baseStyles = "flex justify-between items-center fixed top-17 right-6 z-50 px-4 py-3 rounded shadow-lg flex items-center justify-between min-w-64 max-w-sm transition-all duration-300 ease-in-out";
-  
-  const typeStyles = {
-    normal: "bg-lime-50 text-lime-700 border-l-4 border-lime-500 text-gray-700",
-    error: "bg-red-50 text-red-600 border-l-4 border-red-500 text-gray-700"
+  const styles = {
+    normal: { bg: "bg-gray-900 border-gray-700", icon: <CheckCircle size={15} className="text-lime-400 flex-shrink-0" />, text: "text-white" },
+    error:  { bg: "bg-red-600 border-red-500",   icon: <AlertCircle size={15} className="text-white flex-shrink-0" />,    text: "text-white" },
   };
 
+  const s = styles[type] || styles.normal;
+
   return (
-    <div className={`${baseStyles} ${typeStyles[type]}`}>
-        { type == "error" ? <Ban /> : null}
-        <span className="text-sm font-medium">{message}</span>
-        <button 
-            onClick={() => onClose()} 
-            className="ml-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-            aria-label="Close notification"
-        >
-            <X className="h-4 w-4" />
-        </button>
+    <div className={`fixed top-20 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border min-w-64 max-w-sm ${s.bg} animate-in`}>
+      {s.icon}
+      <span className={`text-sm font-medium flex-1 ${s.text}`}>{message}</span>
+      <button onClick={onClose} className="text-white/60 hover:text-white transition-colors cursor-pointer">
+        <X size={14} />
+      </button>
     </div>
   );
 };
-
-export default Toast;

@@ -41,8 +41,8 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/login").permitAll()
 
 
                         .requestMatchers("/api/admins/**").hasRole("ADMIN")
@@ -55,16 +55,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/trips/{id}").hasRole("DRIVER")
 
 
+                        .requestMatchers(HttpMethod.POST,   "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
+
+
                         .requestMatchers(HttpMethod.GET, "/api/trips/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/drivers/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/passengers/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/vehicles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
-
-
-                        .requestMatchers(HttpMethod.POST,   "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
 
 
                         .anyRequest().denyAll()

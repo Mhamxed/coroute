@@ -1,139 +1,186 @@
-import React, { useContext, useState } from 'react';
-import { Menu, X, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import Axios from 'axios';
-import { NotificationContext, UserContext } from "../App.jsx";
-const API = import.meta.env.VITE_SERVER_URL;
+import { useState, useContext, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, User, LogOut, Settings, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { NotificationContext, UserContext } from '../App';
 
-const Navbar = ({ user }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { token, refreshUser, setrRefreshUser } = useContext(UserContext)
-  const { setNotification, closeNotification } = useContext(NotificationContext)
+const NAV_LINKS = [
+  { label: "Find a trip", to: "/search" },
+];
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const { user, token, setrRefreshUser, refreshUser } = useContext(UserContext);
+  const { setNotification, closeNotification } = useContext(NotificationContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setrRefreshUser(!refreshUser);
+    setDropdownOpen(false);
+    setMenuOpen(false);
+    setNotification({ message: "Logged out successfully", type: "normal", onClose: closeNotification });
+    navigate("/");
   };
 
-  const handleLogout = async () => {
-    try {
-        const res = await Axios.post(`${API}/logout/`, {
-            headers: { Authorization: `Bearer ${token}` }, // Headers
-            withClimeentials: true, // Ensures cookies (if needed)
-            validateStatus: function(status) {
-                return true
-            }
-        })
-        const data = res.data
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        setrRefreshUser(!refreshUser)
-        setNotification({
-            message: data.message,
-            type: "normal",
-            onClose: closeNotification
-        })
-    } catch(err) {
-        console.error(err)
-    }
-    }
+  const initials = user
+    ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase()
+    : "";
 
   return (
-    <nav className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          {/* Logo and navigation */}
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              {/* Logo */}
-              <Link to={"/"}>
-                <div className="flex items-center">
-                    <div className="h-8 w-8 bg-lime-600 rounded-md hover:bg-lime-700 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">C</span>
-                    </div>
-                    <span className="ml-2 text-lg font-semibold text-gray-900">Coroute</span>
-                </div>
-              </Link>
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 bg-lime-500 rounded-xl flex items-center justify-center shadow-sm shadow-lime-200 group-hover:bg-lime-600 transition-colors">
+              <span className="text-white font-black text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>C</span>
             </div>
+            <span className="font-black text-gray-900 text-lg tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>
+              Coroute
+            </span>
+          </Link>
+
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(link => (
+              <Link key={link.to} to={link.to}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  location.pathname === link.to
+                    ? "bg-lime-50 text-lime-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}>
+                {link.label}
+              </Link>
+            ))}
           </div>
-          
-          {/* Auth buttons */}
-          <div className="hidden md:flex md:items-center md:ml-6">
+
+          {/* Desktop auth */}
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <button className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium cursor-pointer text-gray-700 hover:bg-gray-50"
-              onClick={handleLogout}>
-                Logout
-              </button>
-            ) : (
-              <div className="flex space-x-3">
-                <Link to={"/login"}>
-                    <button className="ml-4 px-3 py-2 rounded-md text-sm font-medium cursor-pointer bg-lime-100 text-lime-700 hover:bg-lime-200">
-                    Log in
-                    </button>
-                </Link>
-                <Link to={"/signup"}>
-                    <button className="px-4 py-2 rounded-md border border-transparent text-sm font-medium cursor-pointer text-white bg-lime-600 hover:bg-lime-700">
-                    Sign up
-                    </button>
-                </Link>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-2xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all cursor-pointer"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-lime-400 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                    {initials}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-800">{user.firstName}</span>
+                  <ChevronDown size={14} className={`text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl shadow-gray-100 border border-gray-100 py-2 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-50">
+                      <p className="text-xs font-bold text-gray-900">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>
+                    </div>
+                    <Link to="/dashboard" onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-lime-600 transition-colors">
+                      <LayoutDashboard size={15} />
+                      Dashboard
+                    </Link>
+                    <Link to="/profile" onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-lime-600 transition-colors">
+                      <Settings size={15} />
+                      Profile settings
+                    </Link>
+                    <div className="border-t border-gray-50 mt-1 pt-1">
+                      <button onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
+                        <LogOut size={15} />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
+            ) : (
+              <>
+                <Link to="/login"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+                  Log in
+                </Link>
+                <Link to="/signup"
+                  className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-lime-500 hover:bg-lime-600 transition-colors shadow-sm shadow-lime-200">
+                  Sign up
+                </Link>
+              </>
             )}
           </div>
-          
-          {/* Mobile menu button */}
-          <div className="flex md:hidden items-center">
-            <button
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
-              onClick={toggleMenu}
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" />
-              ) : (
-                <Menu className="block h-6 w-6" />
-              )}
-            </button>
-          </div>
+
+          {/* Mobile burger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            {menuOpen ? <X size={20} className="text-gray-700" /> : <Menu size={20} className="text-gray-700" />}
+          </button>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <Link to={"/analyze"}>
-                <button className="mt-1 w-full text-left px-3 py-2 rounded-md text-base font-medium bg-lime-100 text-lime-700">
-                    Summarize
-                </button>
-              </Link>
-              <Link to={"/videos"}>
-                <button className="mt-1 w-full text-left px-3 py-2 rounded-md text-base font-medium bg-lime-100 text-lime-700">
-                    Videos
-                </button>
+      {menuOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-5 pt-3 space-y-1">
+          {NAV_LINKS.map(link => (
+            <Link key={link.to} to={link.to}
+              className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+              {link.label}
             </Link>
-          </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            {user ? (
-              <div className="px-2 space-y-1">
-                <button className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50"
-                onClick={handleLogout}>
-                  Logout
-                </button>
+          ))}
+          {user ? (
+            <>
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl mt-2">
+                <div className="w-9 h-9 bg-gradient-to-br from-lime-400 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-gray-400">{user.role}</p>
+                </div>
               </div>
-            ) : (
-              <div className="px-2 space-y-1">
-                <button className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                  Log in
-                </button>
-                <button className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white bg-lime-600 hover:bg-lime-700">
-                  Sign up
-                </button>
-              </div>
-            )}
-          </div>
+              <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                <LayoutDashboard size={15} className="text-gray-400" /> Dashboard
+              </Link>
+              <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                <Settings size={15} className="text-gray-400" /> Profile settings
+              </Link>
+              <button onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 cursor-pointer">
+                <LogOut size={15} /> Sign out
+              </button>
+            </>
+          ) : (
+            <div className="flex gap-2 pt-2">
+              <Link to="/login" className="flex-1 py-2.5 text-center rounded-xl text-sm font-semibold text-gray-700 border border-gray-200">
+                Log in
+              </Link>
+              <Link to="/signup" className="flex-1 py-2.5 text-center rounded-xl text-sm font-bold text-white bg-lime-500">
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </nav>
   );
-};
-
-export default Navbar;
+}
