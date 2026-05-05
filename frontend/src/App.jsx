@@ -1,17 +1,17 @@
-import Signup from “./components/signup.jsx”
-import Login from “./components/login.jsx”
-import { createContext, useEffect, useState } from ‘react’;
-import { BrowserRouter as Router, Routes, Route } from “react-router-dom”;
-import Navbar from “./components/navbar.jsx”;
-import Footer from “./components/footer.jsx”;
-import NotFound from “./components/404.jsx”;
-import Home from “./components/home.jsx”;
-import Toast from “./components/toast.jsx”;
-import SearchTrips from “./components/SearchTrips.jsx”;
-import TripDetail from “./components/TripDetail.jsx”;
-import PassengerDashboard from “./components/PassengerDashboard.jsx”;
-import Profile from “./components/Profile.jsx”;
-import MesReservations from “./components/MesReservations.jsx”;
+import Signup from "./components/signup.jsx"
+import Login from "./components/login.jsx"
+import { createContext, useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/navbar.jsx";
+import Footer from "./components/footer.jsx";
+import NotFound from "./components/404.jsx";
+import Home from "./components/home.jsx";
+import Toast from "./components/toast.jsx";
+import SearchTrips from "./components/SearchTrips.jsx";
+import TripDetail from "./components/TripDetail.jsx";
+import PassengerDashboard from "./components/PassengerDashboard.jsx";
+import Profile from "./components/Profile.jsx";
+import MesReservations from "./components/MesReservations.jsx";
 
 export const UserContext = createContext(undefined);
 export const NotificationContext = createContext(undefined);
