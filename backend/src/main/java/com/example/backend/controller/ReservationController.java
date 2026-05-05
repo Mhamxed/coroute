@@ -14,7 +14,7 @@ import com.example.backend.model.Reservation;
 import com.example.backend.service.ReservationService;
 
 @RestController
-@RequestMapping(”/api/reservations”)
+@RequestMapping("/api/reservations")
 public class ReservationController {
     
 private final ReservationService service;
