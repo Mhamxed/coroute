@@ -39,6 +39,10 @@ export default function TripDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    console.log(JSON.stringify(trip))
+  }, [trip])
+
   const handleBook = async () => {
     if (!user || !token) { navigate("/login"); return; }
     setBooking(true);

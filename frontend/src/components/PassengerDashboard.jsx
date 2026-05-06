@@ -28,15 +28,15 @@ function BookingCard({ booking, onCancel, cancelling }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
     >
-      <div className="p-5">
+      {booking && <div className="p-5">
         {/* Route */}
         <div className="flex items-center gap-2 mb-3">
           <span className="font-black text-gray-900 text-base" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {booking.trip?.originCity}
+            {booking.originCity}
           </span>
           <ArrowRight size={14} className="text-lime-500 flex-shrink-0" />
           <span className="font-black text-gray-900 text-base" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {booking.trip?.destinationCity}
+            {booking.destinationCity}
           </span>
           <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full ${s.pill}`}>{s.label}</span>
         </div>
@@ -45,11 +45,11 @@ function BookingCard({ booking, onCancel, cancelling }) {
         <div className="flex flex-wrap gap-3 text-xs text-gray-400 mb-4">
           <span className="flex items-center gap-1">
             <Calendar size={11} className="text-lime-500" />
-            {fmtDate(booking.trip?.departureTime)}
+            {fmtDate(booking.departureTime)}
           </span>
           <span className="flex items-center gap-1">
             <Clock size={11} className="text-lime-500" />
-            {fmtTime(booking.trip?.departureTime)}
+            {fmtTime(booking.departureTime)}
           </span>
           <span className="flex items-center gap-1">
             <Users size={11} className="text-lime-500" />
@@ -59,7 +59,7 @@ function BookingCard({ booking, onCancel, cancelling }) {
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-          <button onClick={() => navigate(`/trips/${booking.trip?.id}`)}
+          <button onClick={() => navigate(`/trips/${booking.tripId}`)}
             className="flex items-center gap-1 text-xs font-semibold text-lime-600 hover:text-lime-700 cursor-pointer transition-colors">
             View trip <ChevronRight size={13} />
           </button>
@@ -71,7 +71,7 @@ function BookingCard({ booking, onCancel, cancelling }) {
             </button>
           )}
         </div>
-      </div>
+      </div>}
     </motion.div>
   );
 }
