@@ -11,7 +11,6 @@ import SearchTrips from "./components/SearchTrips.jsx";
 import TripDetail from "./components/TripDetail.jsx";
 import PassengerDashboard from "./components/PassengerDashboard.jsx";
 import Profile from "./components/Profile.jsx";
-import MesReservations from "./components/MesReservations.jsx";
 import DriverDashboard from "./components/DriverDashboard.jsx";
 import CreateTrip from "./components/CreateTrip.jsx";
 import DriverTripDetail from "./components/DriverTripDetail.jsx";
@@ -38,6 +37,16 @@ function AdminRoute({ element }) {
     const token = localStorage.getItem("adminToken");
     if (!token) return <Navigate to="/admin/login" replace />;
     return element;
+}
+
+function WithNav({ element }) {
+    return (
+        <>
+            <Navbar />
+            {element}
+            <Footer />
+        </>
+    );
 }
 
 function App() {
@@ -67,7 +76,7 @@ function App() {
             <UserContext.Provider value={{ user, setUser, token, setToken, refreshUser, setrRefreshUser }}>
                 <Router>
                     <Routes>
-                        {/* Admin Routes */}
+                        {/* Admin - no Navbar/Footer */}
                         <Route path="/admin/login" element={<AdminLogin />} />
                         <Route path="/admin" element={<AdminRoute element={<AdminLayout />} />}>
                             <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -78,8 +87,25 @@ function App() {
                             <Route path="bookings"  element={<AdminBookings />} />
                         </Route>
 
-                        {/* Public & User Routes via AppShell */}
-                        <Route path="/*" element={<AppShell />} />
+                        {/* Public - with Navbar/Footer */}
+                        <Route path="/"         element={<WithNav element={<Home />} />} />
+                        <Route path="/login"    element={<WithNav element={<Login />} />} />
+                        <Route path="/signup"   element={<WithNav element={<Signup />} />} />
+                        <Route path="/search"   element={<WithNav element={<SearchTrips />} />} />
+                        <Route path="/trips/:id" element={<WithNav element={<TripDetail />} />} />
+
+                        {/* Authenticated */}
+                        <Route path="/profile"  element={<WithNav element={<RoleRoute element={<Profile />} />} />} />
+
+                        {/* Passenger */}
+                        <Route path="/dashboard" element={<WithNav element={<RoleRoute element={<PassengerDashboard />} role="PASSENGER" />} />} />
+
+                        {/* Driver */}
+                        <Route path="/driver/dashboard"  element={<WithNav element={<RoleRoute element={<DriverDashboard />}   role="DRIVER" />} />} />
+                        <Route path="/driver/trips/new"  element={<WithNav element={<RoleRoute element={<CreateTrip />}         role="DRIVER" />} />} />
+                        <Route path="/driver/trips/:id"  element={<WithNav element={<RoleRoute element={<DriverTripDetail />}   role="DRIVER" />} />} />
+
+                        <Route path="*" element={<WithNav element={<NotFound />} />} />
                     </Routes>
 
                     {notification && (
@@ -92,34 +118,6 @@ function App() {
                 </Router>
             </UserContext.Provider>
         </NotificationContext.Provider>
-    );
-}
-
-function AppShell() {
-    return (
-        <>
-            <Navbar />
-            <Routes>
-                <Route path="/"        element={<Home />} />
-                <Route path="/login"   element={<Login />} />
-                <Route path="/signup"  element={<Signup />} />
-                <Route path="/search"  element={<SearchTrips />} />
-                <Route path="/trips/:id" element={<TripDetail />} />
-
-                {/* Protected Routes */}
-                <Route path="/profile"          element={<RoleRoute element={<Profile />} />} />
-                <Route path="/mes-reservations" element={<RoleRoute element={<MesReservations />} />} />
-
-                {/* Role Specific Routes */}
-                <Route path="/dashboard"        element={<RoleRoute element={<PassengerDashboard />} role="PASSENGER" />} />
-                <Route path="/driver/dashboard" element={<RoleRoute element={<DriverDashboard />}   role="DRIVER" />} />
-                <Route path="/driver/trips/new" element={<RoleRoute element={<CreateTrip />}         role="DRIVER" />} />
-                <Route path="/driver/trips/:id" element={<RoleRoute element={<DriverTripDetail />}   role="DRIVER" />} />
-
-                <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Footer />
-        </>
     );
 }
 

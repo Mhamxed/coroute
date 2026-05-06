@@ -14,7 +14,7 @@ export default function Signup() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { refreshUser, setrRefreshUser } = useContext(UserContext);
+  const { refreshUser, setrRefreshUser, setUser, setToken } = useContext(UserContext);
   const { setNotification, closeNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
@@ -25,13 +25,16 @@ export default function Signup() {
     setLoading(true);
     try {
       const res = await Axios.post(`${API}/api/auth/register`, form);
-      localStorage.setItem("user", JSON.stringify(res.data));
-      localStorage.setItem("token", res.data.token);
+      const userData = res.data;
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", userData.token);
+      setUser(userData);
+      setToken(userData.token);
       setrRefreshUser(!refreshUser);
-      navigate("/");
+      navigate(userData.role === "DRIVER" ? "/driver/dashboard" : "/dashboard");
     } catch (err) {
       setNotification({
-        message: err.response?.data?.error || "Registration failed",
+        message: err.response?.data?.message || "Registration failed",
         type: "error",
         onClose: closeNotification,
       });
@@ -51,7 +54,6 @@ export default function Signup() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-9 h-9 bg-lime-500 rounded-xl flex items-center justify-center">
             <span className="text-white font-black" style={{ fontFamily: "'Syne', sans-serif" }}>C</span>
@@ -63,7 +65,6 @@ export default function Signup() {
           <h1 className="text-2xl font-black text-gray-900 mb-1" style={{ fontFamily: "'Syne', sans-serif" }}>Create account</h1>
           <p className="text-gray-500 text-sm mb-6">Already have one? <Link to="/login" className="text-lime-600 font-semibold hover:text-lime-700">Sign in</Link></p>
 
-          {/* Role picker */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             {[
               { value: "PASSENGER", label: "I'm a passenger", icon: User, desc: "Find and book trips" },
@@ -128,7 +129,6 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Driver-only fields */}
             {form.role === "DRIVER" && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}

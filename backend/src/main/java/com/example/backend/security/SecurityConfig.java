@@ -2,7 +2,6 @@ package com.example.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,34 +39,9 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/login").permitAll()
-
-
-                        .requestMatchers("/api/admins/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/drivers/{id}/verify").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/passengers/{id}/verify").hasRole("ADMIN")
-
-
-                        .requestMatchers(HttpMethod.POST,   "/api/trips").hasRole("DRIVER")
-                        .requestMatchers(HttpMethod.PUT,    "/api/trips/{id}").hasRole("DRIVER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/trips/{id}").hasRole("DRIVER")
-
-
-                        .requestMatchers(HttpMethod.POST,   "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/vehicles/**").hasAnyRole("DRIVER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/vehicles/**").hasRole("ADMIN")
-
-
-                        .requestMatchers(HttpMethod.GET, "/api/trips/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/drivers/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/passengers/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/vehicles/**").authenticated()
-                        .requestMatchers("/api/users/**").authenticated()
-
-
-                        .anyRequest().denyAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,10 +1,10 @@
 package com.example.backend.repository;
+
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
-import java.sql.PreparedStatement;
 import com.example.backend.model.Trajet;
-
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -36,10 +36,8 @@ public class TrajetRepository {
         return t;
     };
 
-    // CREATE
     public int create(Trajet t) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
                 INSERT INTO trips
@@ -47,33 +45,26 @@ public class TrajetRepository {
                  total_seats, available_seats, price_per_seat, description, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, Statement.RETURN_GENERATED_KEYS);
-
             ps.setInt(1, t.getDriverId());
             ps.setString(2, t.getOriginCity());
             ps.setString(3, t.getDestinationCity());
             ps.setTimestamp(4, Timestamp.valueOf(t.getDepartureTime()));
             ps.setInt(5, t.getTotalSeats());
-            ps.setInt(6, t.getTotalSeats()); // initially same
+            ps.setInt(6, t.getTotalSeats());
             ps.setBigDecimal(7, t.getPricePerSeat());
             ps.setString(8, t.getDescription());
             ps.setString(9, "SCHEDULED");
-
             return ps;
         }, keyHolder);
-
         return keyHolder.getKey().intValue();
     }
 
-    // FIND BY ID
     public Trajet findById(int id) {
         return jdbcTemplate.queryForObject(
-            "SELECT * FROM trips WHERE id = ?",
-            mapper,
-            id
-        );
+                "SELECT * FROM trips WHERE id = ?",
+                mapper, id);
     }
 
-    // SEARCH
     public List<Trajet> search(String origin, String destination) {
         return jdbcTemplate.query("""
             SELECT * FROM trips
@@ -84,16 +75,12 @@ public class TrajetRepository {
         """, mapper, origin, destination);
     }
 
-    // DRIVER TRIPS
     public List<Trajet> findByDriver(int driverId) {
         return jdbcTemplate.query(
-            "SELECT * FROM trips WHERE driver_id = ?",
-            mapper,
-            driverId
-        );
+                "SELECT * FROM trips WHERE driver_id = ? ORDER BY created_at DESC",
+                mapper, driverId);
     }
 
-    // UPDATE
     public int update(Trajet t) {
         return jdbcTemplate.update("""
             UPDATE trips
@@ -101,22 +88,29 @@ public class TrajetRepository {
                 total_seats = ?, price_per_seat = ?, description = ?
             WHERE id = ?
         """,
-            t.getOriginCity(),
-            t.getDestinationCity(),
-            Timestamp.valueOf(t.getDepartureTime()),
-            t.getTotalSeats(),
-            t.getPricePerSeat(),
-            t.getDescription(),
-            t.getId()
-        );
+                t.getOriginCity(),
+                t.getDestinationCity(),
+                Timestamp.valueOf(t.getDepartureTime()),
+                t.getTotalSeats(),
+                t.getPricePerSeat(),
+                t.getDescription(),
+                t.getId());
     }
 
-    // CANCEL
     public int cancel(int tripId) {
-        return jdbcTemplate.update("""
-            UPDATE trips
-            SET status = 'CANCELLED'
-            WHERE id = ?
-        """, tripId);
+        return jdbcTemplate.update(
+                "UPDATE trips SET status = 'CANCELLED' WHERE id = ?", tripId);
+    }
+
+    public void decreaseSeats(int tripId, int seats) {
+        jdbcTemplate.update(
+                "UPDATE trips SET available_seats = available_seats - ? WHERE id = ?",
+                seats, tripId);
+    }
+
+    public void increaseSeats(int tripId, int seats) {
+        jdbcTemplate.update(
+                "UPDATE trips SET available_seats = available_seats + ? WHERE id = ?",
+                seats, tripId);
     }
 }

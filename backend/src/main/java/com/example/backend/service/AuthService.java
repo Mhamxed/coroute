@@ -74,8 +74,13 @@ public class AuthService {
             case "ADMIN" -> adminRepository.create(userId);
         }
 
+        User created = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found after creation"));
+
         String token = jwtUtil.generate(userId, role);
-        return new AuthResponse(token, role, userId);
+        return new AuthResponse(token, role, userId,
+                created.getFirstName(), created.getLastName(), created.getEmail(),
+                created.getPhone(), created.getAvatarUrl(), created.getBio());
     }
 
     public AuthResponse login(AuthRequest req) {
@@ -87,6 +92,8 @@ public class AuthService {
         }
 
         String token = jwtUtil.generate(user.getId(), user.getRole());
-        return new AuthResponse(token, user.getRole(), user.getId());
+        return new AuthResponse(token, user.getRole(), user.getId(),
+                user.getFirstName(), user.getLastName(), user.getEmail(),
+                user.getPhone(), user.getAvatarUrl(), user.getBio());
     }
 }

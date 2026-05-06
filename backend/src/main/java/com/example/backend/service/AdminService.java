@@ -46,7 +46,9 @@ public class AdminService {
         }
 
         String token = jwtUtil.generate(user.getId(), user.getRole());
-        return new AuthResponse(token, user.getRole(), user.getId());
+        return new AuthResponse(token, user.getRole(), user.getId(),
+                user.getFirstName(), user.getLastName(), user.getEmail(),
+                user.getPhone(), user.getAvatarUrl(), user.getBio());
     }
 
 

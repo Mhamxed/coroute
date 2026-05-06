@@ -1,0 +1,70 @@
+package com.example.backend.service;
+
+import com.example.backend.model.Booking;
+import com.example.backend.repository.BookingRepository;
+import com.example.backend.repository.TrajetRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class BookingService {
+
+    private final BookingRepository bookingRepository;
+    private final TrajetRepository trajetRepository;
+
+    public BookingService(BookingRepository bookingRepository, TrajetRepository trajetRepository) {
+        this.bookingRepository = bookingRepository;
+        this.trajetRepository = trajetRepository;
+    }
+
+    @Transactional
+    public int create(Booking b) {
+        if (bookingRepository.existsByPassengerAndTrip(b.getPassengerId(), b.getTripId())) {
+            throw new RuntimeException("You already have a booking for this trip");
+        }
+        var trip = trajetRepository.findById(b.getTripId());
+        if (trip == null) throw new RuntimeException("Trip not found");
+        if (!"SCHEDULED".equals(trip.getStatus())) throw new RuntimeException("Trip is not available");
+        if (trip.getAvailableSeats() < b.getSeatsBooked()) throw new RuntimeException("Not enough seats available");
+        return bookingRepository.create(b);
+    }
+
+    public Booking get(int id) {
+        return bookingRepository.findById(id);
+    }
+
+    public List<Booking> getByPassenger(int passengerId) {
+        return bookingRepository.findByPassenger(passengerId);
+    }
+
+    public List<Booking> getByTrip(int tripId) {
+        return bookingRepository.findByTrip(tripId);
+    }
+
+    @Transactional
+    public void confirm(int id) {
+        Booking b = bookingRepository.findById(id);
+        var trip = trajetRepository.findById(b.getTripId());
+        if (trip.getAvailableSeats() < b.getSeatsBooked()) {
+            throw new RuntimeException("Not enough seats left");
+        }
+        bookingRepository.confirm(id);
+        trajetRepository.decreaseSeats(b.getTripId(), b.getSeatsBooked());
+    }
+
+    @Transactional
+    public void decline(int id) {
+        bookingRepository.decline(id);
+    }
+
+    @Transactional
+    public void cancel(int id) {
+        Booking b = bookingRepository.findById(id);
+        if ("SCHEDULED".equals(b.getStatus())) {
+            trajetRepository.increaseSeats(b.getTripId(), b.getSeatsBooked());
+        }
+        bookingRepository.cancel(id);
+    }
+}

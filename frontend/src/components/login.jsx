@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { refreshUser, setrRefreshUser } = useContext(UserContext);
+  const { refreshUser, setrRefreshUser, setUser, setToken } = useContext(UserContext);
   const { setNotification, closeNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
@@ -21,13 +21,18 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await Axios.post(`${API}/api/auth/login`, { email, password });
-      localStorage.setItem("user", JSON.stringify(res.data));
-      localStorage.setItem("token", res.data.token);
+      const userData = res.data;
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", userData.token);
+      setUser(userData);
+      setToken(userData.token);
       setrRefreshUser(!refreshUser);
-      navigate("/");
+      navigate(userData.role === "DRIVER" ? "/driver/dashboard" : "/dashboard");
+      console.log("API response:", res.data);
+      console.log("Stored user:", JSON.parse(localStorage.getItem("user")));
     } catch (err) {
       setNotification({
-        message: err.response?.data?.error || "Invalid credentials",
+        message: err.response?.data?.message || "Invalid credentials",
         type: "error",
         onClose: closeNotification,
       });
@@ -38,7 +43,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left panel - decorative */}
       <div className="hidden lg:flex lg:w-1/2 bg-gray-900 relative overflow-hidden flex-col justify-between p-12">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/20 rounded-full blur-3xl" />
@@ -60,7 +64,6 @@ export default function Login() {
           <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
             Sign in to view your bookings, manage your trips, and connect with drivers across Morocco.
           </p>
-          {/* Testimonial */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5 max-w-sm">
             <p className="text-gray-300 text-sm italic leading-relaxed">"I travel Casablanca to Rabat every week. Coroute saves me 60% compared to the train."</p>
             <div className="flex items-center gap-3 mt-4">
@@ -75,7 +78,6 @@ export default function Login() {
         <div className="relative text-gray-600 text-xs">© {new Date().getFullYear()} Coroute</div>
       </div>
 
-      {/* Right panel - form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -83,7 +85,6 @@ export default function Login() {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="w-full max-w-sm"
         >
-          {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 bg-lime-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-black text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>C</span>

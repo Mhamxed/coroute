@@ -16,7 +16,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -27,7 +26,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   const handleLogout = () => {
@@ -44,12 +42,13 @@ export default function Navbar() {
     ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase()
     : "";
 
+  const dashboardPath = user?.role === "DRIVER" ? "/driver/dashboard" : "/dashboard";
+
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
 
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 bg-lime-500 rounded-xl flex items-center justify-center shadow-sm shadow-lime-200 group-hover:bg-lime-600 transition-colors">
               <span className="text-white font-black text-sm" style={{ fontFamily: "'Syne', sans-serif" }}>C</span>
@@ -59,7 +58,6 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map(link => (
               <Link key={link.to} to={link.to}
@@ -73,7 +71,6 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Desktop auth */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="relative" ref={dropdownRef}>
@@ -94,7 +91,7 @@ export default function Navbar() {
                       <p className="text-xs font-bold text-gray-900">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>
                     </div>
-                    <Link to="/dashboard" onClick={() => setDropdownOpen(false)}
+                    <Link to={dashboardPath} onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-lime-600 transition-colors">
                       <LayoutDashboard size={15} />
                       Dashboard
@@ -128,7 +125,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile burger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
@@ -138,7 +134,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-5 pt-3 space-y-1">
           {NAV_LINKS.map(link => (
@@ -158,7 +153,7 @@ export default function Navbar() {
                   <p className="text-xs text-gray-400">{user.role}</p>
                 </div>
               </div>
-              <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
+              <Link to={dashboardPath} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
                 <LayoutDashboard size={15} className="text-gray-400" /> Dashboard
               </Link>
               <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50">
