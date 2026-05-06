@@ -123,7 +123,7 @@ export default function PassengerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gray-900 pt-10 pb-20 px-4 relative overflow-hidden">
+      <div className="bg-gray-900 pt-10 pb-10 px-4 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-lime-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
         <div className="relative max-w-2xl mx-auto">
@@ -155,7 +155,7 @@ export default function PassengerDashboard() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 -mt-8 pb-16 space-y-5">
+      <div className="max-w-2xl mx-auto px-4 mt-6 pb-16 space-y-5">
         {/* Search CTA */}
         <button onClick={() => navigate("/search")}
           className="w-full bg-lime-500 hover:bg-lime-600 text-white rounded-2xl p-4 flex items-center gap-3 shadow-lg shadow-lime-200 transition-all cursor-pointer group">

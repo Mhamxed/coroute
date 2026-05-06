@@ -77,7 +77,7 @@ export default function TripDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gray-900 pt-8 pb-20 px-4 relative overflow-hidden">
+      <div className="bg-gray-900 pt-10 pb-10 px-4 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-80 h-80 bg-lime-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
@@ -109,7 +109,7 @@ export default function TripDetail() {
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 -mt-10 pb-16 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 mt-6 pb-16 space-y-5">
         {/* Trip info card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100 p-6">
