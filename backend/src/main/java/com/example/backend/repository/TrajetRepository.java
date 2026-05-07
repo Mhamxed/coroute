@@ -113,4 +113,12 @@ public class TrajetRepository {
                 "UPDATE trips SET available_seats = available_seats + ? WHERE id = ?",
                 seats, tripId);
     }
+    public int completePassedTrips() {
+        return jdbcTemplate.update("""
+            UPDATE trips
+            SET status = 'COMPLETED'
+            WHERE status = 'SCHEDULED'
+            AND departure_time < DATEADD(HOUR, 1, SYSDATETIME())
+        """);
+    }
 }
