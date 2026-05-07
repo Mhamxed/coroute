@@ -13,7 +13,7 @@ public class TripExpiryScheduler {
 
     private final TrajetRepository trajetRepository;
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 300000)
     public void completePassedTrips() {
         log.info("Scheduler fired");
         int count = trajetRepository.completePassedTrips();
