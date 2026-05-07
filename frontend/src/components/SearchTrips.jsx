@@ -1,14 +1,109 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Axios from "axios";
 import { Search, MapPin, Calendar, Users, ArrowRight, Clock, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { NotificationContext, UserContext } from "../App";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API = import.meta.env.VITE_SERVER_URL;
 
 const fmtTime = (dt) => dt ? new Date(dt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 const fmtDate = (dt) => dt ? new Date(dt).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : "";
+
+const MOROCCO_CITIES = [
+  "Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir", "Meknès",
+  "Oujda", "Kénitra", "Tétouan", "Safi", "Mohammedia", "El Jadida", "Beni Mellal",
+  "Nador", "Taza", "Settat", "Berrechid", "Khémisset", "Tinghir", "Inezgane", "Khouribga",
+  "Béni Mellal", "Taroudant", "Essaouira", "Ouarzazate", "Laâyoune", "Dakhla",
+  "Ifrane", "Azrou", "Errachidia", "Guelmim", "Tiznit", "Chefchaouen", "Al Hoceïma",
+];
+
+function CityInput({ label, name, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const [filtered, setFiltered] = useState([]);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleInput = (e) => {
+    const val = e.target.value;
+    onChange(e);
+    if (val.length > 0) {
+      const matches = MOROCCO_CITIES.filter((c) =>
+        c.toLowerCase().includes(val.toLowerCase())
+      );
+      setFiltered(matches);
+      setOpen(matches.length > 0);
+    } else {
+      setOpen(false);
+      setFiltered([]);
+    }
+  };
+
+  const handleSelect = (city) => {
+    onChange({ target: { name, value: city } });
+    setOpen(false);
+    setFiltered([]);
+  };
+
+  const inputClass =
+    "w-full pl-9 pr-3 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-transparent transition-all";
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+        {label}
+      </label>
+      <div className="relative">
+        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500 z-10" />
+        <input
+          type="text"
+          name={name}
+          value={value}
+          onChange={handleInput}
+          onFocus={() => {
+            if (value.length > 0 && filtered.length > 0) setOpen(true);
+          }}
+          placeholder={placeholder}
+          required
+          autoComplete="off"
+          className={inputClass}
+        />
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden max-h-48 overflow-y-auto"
+          >
+            {filtered.map((city) => (
+              <li
+                key={city}
+                onMouseDown={() => handleSelect(city)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-lime-50 hover:text-lime-700 cursor-pointer transition-colors"
+              >
+                <MapPin size={12} className="text-lime-400 flex-shrink-0" />
+                {city}
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function SearchTrips() {
   const [form, setForm] = useState({ from: "", to: "", date: "", seats: 1 });
@@ -23,7 +118,7 @@ export default function SearchTrips() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSearch = async (e, pageNum = 0) => {
@@ -34,24 +129,29 @@ export default function SearchTrips() {
         params: { origin: form.from, destination: form.to },
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = Array.isArray(res.data) ? res.data : (res.data.content || []);
+      const data = Array.isArray(res.data) ? res.data : res.data.content || [];
       setResults(data);
       setTotalPages(res.data.totalPages || 1);
       setPage(pageNum);
       setSearched(true);
     } catch (err) {
-      setNotification({ message: err.response?.data?.error || "Search failed", type: "error", onClose: closeNotification });
+      setNotification({
+        message: err.response?.data?.error || "Search failed",
+        type: "error",
+        onClose: closeNotification,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const inputClass = "w-full pl-9 pr-3 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-transparent transition-all";
+  const inputClass =
+    "w-full pl-9 pr-3 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-transparent transition-all";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Hero search */}
-      <div className="bg-gray-900 pt-14 pb-24 px-4 relative overflow-hidden">
+      <div className="bg-gray-900 pt-14 pb-10 px-4 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl" />
@@ -83,38 +183,68 @@ export default function SearchTrips() {
           className="relative max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl shadow-black/20 p-6"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            {/* City autocomplete inputs */}
+            <CityInput
+              label="From"
+              name="from"
+              value={form.from}
+              onChange={handleChange}
+              placeholder="Departure city"
+            />
+            <CityInput
+              label="To"
+              name="to"
+              value={form.to}
+              onChange={handleChange}
+              placeholder="Destination city"
+            />
+
+            {/* Date */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">From</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Date
+              </label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                <input type="text" name="from" value={form.from} onChange={handleChange} placeholder="Departure city" required className={inputClass} />
+                <Calendar
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500"
+                />
+                <input
+                  type="date"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  className={inputClass}
+                />
               </div>
             </div>
+
+            {/* Seats */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">To</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Seats needed
+              </label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                <input type="text" name="to" value={form.to} onChange={handleChange} placeholder="Destination city" required className={inputClass} />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Date</label>
-              <div className="relative">
-                <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                <input type="date" name="date" value={form.date} onChange={handleChange} className={inputClass} />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Seats needed</label>
-              <div className="relative">
-                <Users size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                <input type="number" name="seats" value={form.seats} onChange={handleChange} min="1"
-                  className={inputClass} />
+                <Users
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500"
+                />
+                <input
+                  type="number"
+                  name="seats"
+                  value={form.seats}
+                  onChange={handleChange}
+                  min="1"
+                  className={inputClass}
+                />
               </div>
             </div>
           </div>
-          <button type="submit"
-            className="w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3.5 rounded-2xl text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-lime-200">
+
+          <button
+            type="submit"
+            className="w-full bg-lime-500 hover:bg-lime-600 text-white font-bold py-3.5 rounded-2xl text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-lime-200"
+          >
             <Search size={16} />
             Search Trips
           </button>
@@ -122,11 +252,14 @@ export default function SearchTrips() {
       </div>
 
       {/* Results */}
-      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-16 space-y-4">
+      <div className="flex-1 max-w-2xl mx-auto w-full px-4 mt-4 pb-16 space-y-4">
         {loading && (
           <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse"
+              >
                 <div className="flex justify-between mb-3">
                   <div className="h-4 bg-gray-100 rounded-lg w-36" />
                   <div className="h-4 bg-gray-100 rounded-lg w-16" />
@@ -162,7 +295,12 @@ export default function SearchTrips() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div>
-                      <p className="font-black text-gray-900" style={{ fontFamily: "'Syne', sans-serif" }}>{trip.originCity}</p>
+                      <p
+                        className="font-black text-gray-900"
+                        style={{ fontFamily: "'Syne', sans-serif" }}
+                      >
+                        {trip.originCity}
+                      </p>
                       <p className="text-xs text-gray-400">{fmtTime(trip.departureTime)}</p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -173,12 +311,22 @@ export default function SearchTrips() {
                       <div className="w-1.5 h-1.5 rounded-full bg-gray-200" />
                     </div>
                     <div>
-                      <p className="font-black text-gray-900" style={{ fontFamily: "'Syne', sans-serif" }}>{trip.destinationCity}</p>
+                      <p
+                        className="font-black text-gray-900"
+                        style={{ fontFamily: "'Syne', sans-serif" }}
+                      >
+                        {trip.destinationCity}
+                      </p>
                       <p className="text-xs text-gray-400">{fmtDate(trip.departureTime)}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 ml-3">
-                    <p className="font-black text-lime-600 text-xl" style={{ fontFamily: "'Syne', sans-serif" }}>{trip.pricePerSeat}</p>
+                    <p
+                      className="font-black text-lime-600 text-xl"
+                      style={{ fontFamily: "'Syne', sans-serif" }}
+                    >
+                      {trip.pricePerSeat}
+                    </p>
                     <p className="text-xs text-gray-400">MAD/seat</p>
                   </div>
                 </div>
@@ -197,20 +345,31 @@ export default function SearchTrips() {
                     <Clock size={11} className="text-gray-300" />
                     <span>{fmtTime(trip.departureTime)}</span>
                   </div>
-                  <ArrowRight size={13} className="text-gray-200 group-hover:text-lime-400 transition-colors" />
+                  <ArrowRight
+                    size={13}
+                    className="text-gray-200 group-hover:text-lime-400 transition-colors"
+                  />
                 </div>
               </motion.div>
             ))}
 
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-3 pt-2">
-                <button onClick={() => handleSearch(null, page - 1)} disabled={page === 0}
-                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-all">
+                <button
+                  onClick={() => handleSearch(null, page - 1)}
+                  disabled={page === 0}
+                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-all"
+                >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="text-sm text-gray-500">Page {page + 1} of {totalPages}</span>
-                <button onClick={() => handleSearch(null, page + 1)} disabled={page + 1 >= totalPages}
-                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-all">
+                <span className="text-sm text-gray-500">
+                  Page {page + 1} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handleSearch(null, page + 1)}
+                  disabled={page + 1 >= totalPages}
+                  className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 cursor-pointer transition-all"
+                >
                   <ChevronRight size={16} />
                 </button>
               </div>

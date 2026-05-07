@@ -27,6 +27,9 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    console.log(JSON.stringify(user))
+  }, [user])
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -59,6 +62,14 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
+            {user?.role === "DRIVER" && <Link to={"/driver/trips/new"}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  location.pathname === "/driver/trips/new"
+                    ? "bg-lime-50 text-lime-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}>
+                {"New trip"}
+              </Link>}
             {NAV_LINKS.map(link => (
               <Link key={link.to} to={link.to}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
