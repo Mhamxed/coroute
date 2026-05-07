@@ -1,13 +1,103 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Axios from "axios";
 import { ArrowLeft, MapPin, Calendar, Clock, Users, DollarSign, FileText, CheckCircle } from "lucide-react";
 import { NotificationContext, UserContext } from "../App";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API = import.meta.env.VITE_SERVER_URL;
 
 const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-transparent transition-all";
 const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5";
+
+const MOROCCO_CITIES = [
+  "Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir", "Meknès",
+  "Oujda", "Kénitra", "Tétouan", "Safi", "Mohammedia", "El Jadida", "Beni Mellal",
+  "Nador", "Taza", "Settat", "Berrechid", "Khémisset", "Inezgane", "Khouribga",
+  "Taroudant", "Essaouira", "Ouarzazate", "Laâyoune", "Dakhla",
+  "Ifrane", "Azrou", "Errachidia", "Guelmim", "Tiznit", "Tinghir", "Chefchaouen", "Al Hoceïma",
+];
+
+function CityInput({ label, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const [filtered, setFiltered] = useState([]);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleInput = (e) => {
+    const val = e.target.value;
+    onChange(val);
+    if (val.length > 0) {
+      const matches = MOROCCO_CITIES.filter((c) =>
+        c.toLowerCase().includes(val.toLowerCase())
+      );
+      setFiltered(matches);
+      setOpen(matches.length > 0);
+    } else {
+      setOpen(false);
+      setFiltered([]);
+    }
+  };
+
+  const handleSelect = (city) => {
+    onChange(city);
+    setOpen(false);
+    setFiltered([]);
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <label className={labelClass}>{label}</label>
+      <div className="relative">
+        <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500 z-10" />
+        <input
+          type="text"
+          value={value}
+          onChange={handleInput}
+          onFocus={() => {
+            if (value.length > 0 && filtered.length > 0) setOpen(true);
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          required
+          className={`${inputClass} pl-9`}
+        />
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-black/10 overflow-hidden max-h-48 overflow-y-auto"
+          >
+            {filtered.map((city) => (
+              <li
+                key={city}
+                onMouseDown={() => handleSelect(city)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-lime-50 hover:text-lime-700 cursor-pointer transition-colors"
+              >
+                <MapPin size={12} className="text-lime-400 flex-shrink-0" />
+                {city}
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function CreateTrip() {
   const { token } = useContext(UserContext);
@@ -26,6 +116,7 @@ export default function CreateTrip() {
   });
 
   const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+  const setCity = (field) => (value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,24 +164,20 @@ export default function CreateTrip() {
         <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100 p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
 
-            {/* Route */}
+            {/* Route — city autocomplete */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>From</label>
-                <div className="relative">
-                  <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                  <input type="text" value={form.originCity} onChange={set("originCity")}
-                    placeholder="Casablanca" className={`${inputClass} pl-9`} required />
-                </div>
-              </div>
-              <div>
-                <label className={labelClass}>To</label>
-                <div className="relative">
-                  <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-lime-500" />
-                  <input type="text" value={form.destinationCity} onChange={set("destinationCity")}
-                    placeholder="Marrakech" className={`${inputClass} pl-9`} required />
-                </div>
-              </div>
+              <CityInput
+                label="From"
+                value={form.originCity}
+                onChange={setCity("originCity")}
+                placeholder="Casablanca"
+              />
+              <CityInput
+                label="To"
+                value={form.destinationCity}
+                onChange={setCity("destinationCity")}
+                placeholder="Marrakech"
+              />
             </div>
 
             {/* Date & Time */}
