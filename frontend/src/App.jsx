@@ -1,7 +1,7 @@
 import Signup from "./components/signup.jsx"
 import Login from "./components/login.jsx"
 import { createContext, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./components/navbar.jsx";
 import Footer from "./components/footer.jsx";
 import NotFound from "./components/404.jsx";
@@ -21,6 +21,7 @@ import AdminUsers from "./components/admin/AdminUsers.jsx";
 import AdminDrivers from "./components/admin/AdminDrivers.jsx";
 import AdminTrips from "./components/admin/AdminTrips.jsx";
 import AdminBookings from "./components/admin/AdminBookings.jsx";
+import "leaflet/dist/leaflet.css";
 
 export const UserContext = createContext(undefined);
 export const NotificationContext = createContext(undefined);
@@ -47,6 +48,23 @@ function WithNav({ element }) {
             <Footer />
         </>
     );
+}
+
+// No footer — used for full-screen pages like TripDetail
+function WithNavOnly({ element }) {
+    return (
+        <>
+            <Navbar />
+            {element}
+        </>
+    );
+}
+
+// Reads location.key so TripDetail fully remounts on every navigation,
+// guaranteeing a fresh API fetch and correct availableSeats
+function TripDetailWithKey() {
+    const location = useLocation();
+    return <TripDetail key={location.key} />;
 }
 
 function App() {
@@ -76,7 +94,7 @@ function App() {
             <UserContext.Provider value={{ user, setUser, token, setToken, refreshUser, setrRefreshUser }}>
                 <Router>
                     <Routes>
-                        {/* Admin - no Navbar/Footer */}
+                        {/* Admin  */}
                         <Route path="/admin/login" element={<AdminLogin />} />
                         <Route path="/admin" element={<AdminRoute element={<AdminLayout />} />}>
                             <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -87,12 +105,14 @@ function App() {
                             <Route path="bookings"  element={<AdminBookings />} />
                         </Route>
 
-                        {/* Public - with Navbar/Footer */}
+                        {/* Public */}
                         <Route path="/"         element={<WithNav element={<Home />} />} />
                         <Route path="/login"    element={<WithNav element={<Login />} />} />
                         <Route path="/signup"   element={<WithNav element={<Signup />} />} />
                         <Route path="/search"   element={<WithNav element={<SearchTrips />} />} />
-                        <Route path="/trips/:id" element={<WithNav element={<TripDetail />} />} />
+
+                        {/* Trip detail */}
+                        <Route path="/trips/:id" element={<WithNavOnly element={<TripDetailWithKey />} />} />
 
                         {/* Authenticated */}
                         <Route path="/profile"  element={<WithNav element={<RoleRoute element={<Profile />} />} />} />

@@ -45,7 +45,7 @@ export default function Navbar() {
   const dashboardPath = user?.role === "DRIVER" ? "/driver/dashboard" : "/dashboard";
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+    <nav className="sticky top-0 z-[2000] bg-white/80 backdrop-blur-xl border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
 
