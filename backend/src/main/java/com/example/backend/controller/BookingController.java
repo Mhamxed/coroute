@@ -39,6 +39,11 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.get(id));
     }
 
+    @GetMapping("/trip/{tripId}")
+    public ResponseEntity<List<Booking>> getByTrip(@PathVariable int tripId) {
+        return ResponseEntity.ok(bookingService.getByTrip(tripId));
+    }
+
     @PatchMapping("/{id}/confirm")
     public ResponseEntity<Void> confirm(@PathVariable int id) {
         bookingService.confirm(id);

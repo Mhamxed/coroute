@@ -12,6 +12,7 @@ public class Booking {
     private Integer passengerId;
     private Integer seatsBooked;
     private String status;
+    private String paymentIntentId;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime bookedAt;

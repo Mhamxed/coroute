@@ -13,10 +13,12 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final TrajetRepository trajetRepository;
+    private final PaymentService paymentService;
 
-    public BookingService(BookingRepository bookingRepository, TrajetRepository trajetRepository) {
+    public BookingService(BookingRepository bookingRepository, TrajetRepository trajetRepository, PaymentService paymentService) {
         this.bookingRepository = bookingRepository;
         this.trajetRepository = trajetRepository;
+        this.paymentService = paymentService;
     }
 
     @Transactional
@@ -28,6 +30,12 @@ public class BookingService {
         if (trip == null) throw new RuntimeException("Trip not found");
         if (!"SCHEDULED".equals(trip.getStatus())) throw new RuntimeException("Trip is not available");
         if (trip.getAvailableSeats() < b.getSeatsBooked()) throw new RuntimeException("Not enough seats available");
+
+        if (b.getPaymentIntentId() == null || b.getPaymentIntentId().isBlank()) {
+            throw new RuntimeException("Payment required before booking");
+        }
+        paymentService.verifyPayment(b.getPaymentIntentId());
+
         return bookingRepository.create(b);
     }
 

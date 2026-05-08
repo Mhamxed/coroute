@@ -27,6 +27,7 @@ public class BookingRepository {
         b.setPassengerId(rs.getInt("passenger_id"));
         b.setSeatsBooked(rs.getInt("seats_booked"));
         b.setStatus(rs.getString("status"));
+        try { b.setPaymentIntentId(rs.getString("payment_intent_id")); } catch (Exception ignored) {}
         if (rs.getTimestamp("booked_at") != null)
             b.setBookedAt(rs.getTimestamp("booked_at").toLocalDateTime());
         if (rs.getTimestamp("created_at") != null)
@@ -49,11 +50,12 @@ public class BookingRepository {
         KeyHolder key = new GeneratedKeyHolder();
         jdbc.update(conn -> {
             PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO bookings (trip_id, passenger_id, seats_booked, status) VALUES (?, ?, ?, 'WAITING')",
+                    "INSERT INTO bookings (trip_id, passenger_id, seats_booked, status, payment_intent_id) VALUES (?, ?, ?, 'WAITING', ?)",
                     Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, b.getTripId());
             ps.setInt(2, b.getPassengerId());
             ps.setInt(3, b.getSeatsBooked());
+            ps.setString(4, b.getPaymentIntentId());
             return ps;
         }, key);
         return key.getKey().intValue();
