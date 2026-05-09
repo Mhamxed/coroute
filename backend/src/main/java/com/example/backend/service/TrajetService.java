@@ -1,16 +1,20 @@
 package com.example.backend.service;
+
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.example.backend.repository.TrajetRepository;
-import com.example.backend.model.Trajet;;
+import com.example.backend.model.Trajet;
 
 @Service
 public class TrajetService {
 
     private final TrajetRepository repo;
+    private final BookingService bookingService;
 
-    public TrajetService(TrajetRepository repo) {
+    public TrajetService(TrajetRepository repo, BookingService bookingService) {
         this.repo = repo;
+        this.bookingService = bookingService;
     }
 
     public int create(Trajet t) {
@@ -33,7 +37,9 @@ public class TrajetService {
         repo.update(t);
     }
 
+    @Transactional
     public void cancel(int id) {
+        bookingService.cancelAllByTripByDriver(id);
         repo.cancel(id);
     }
 }

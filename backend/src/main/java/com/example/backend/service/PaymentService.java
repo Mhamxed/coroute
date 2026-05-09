@@ -4,7 +4,9 @@ import com.example.backend.repository.TrajetRepository;
 import com.example.backend.model.Trajet;
 import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,13 +16,11 @@ import java.math.BigDecimal;
 public class PaymentService {
 
     private final TrajetRepository trajetRepository;
-    private final String stripeSecretKey;
 
     public PaymentService(
             TrajetRepository trajetRepository,
             @Value("${stripe.secret-key}") String stripeSecretKey) {
         this.trajetRepository = trajetRepository;
-        this.stripeSecretKey = stripeSecretKey;
         Stripe.apiKey = stripeSecretKey;
     }
 
@@ -63,6 +63,17 @@ public class PaymentService {
             }
         } catch (Exception e) {
             throw new RuntimeException("Payment verification failed: " + e.getMessage());
+        }
+    }
+
+    public Refund refund(String paymentIntentId) {
+        try {
+            RefundCreateParams params = RefundCreateParams.builder()
+                    .setPaymentIntent(paymentIntentId)
+                    .build();
+            return Refund.create(params);
+        } catch (Exception e) {
+            throw new RuntimeException("Refund failed: " + e.getMessage());
         }
     }
 }

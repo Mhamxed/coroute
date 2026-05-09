@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.model.Booking;
 import com.example.backend.repository.BookingRepository;
 import com.example.backend.repository.TrajetRepository;
+import com.stripe.model.Refund;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,11 +69,44 @@ public class BookingService {
     }
 
     @Transactional
-    public void cancel(int id) {
+    public void cancelByPassenger(int id) {
         Booking b = bookingRepository.findById(id);
         if ("SCHEDULED".equals(b.getStatus())) {
             trajetRepository.increaseSeats(b.getTripId(), b.getSeatsBooked());
         }
-        bookingRepository.cancel(id);
+        String refundId = null;
+        String refundStatus = "NONE";
+        if (b.getPaymentIntentId() != null && !b.getPaymentIntentId().isBlank()) {
+            try {
+                Refund refund = paymentService.refund(b.getPaymentIntentId());
+                refundId = refund.getId();
+                refundStatus = "succeeded".equals(refund.getStatus()) ? "REFUNDED" : "PENDING";
+            } catch (Exception e) {
+                refundStatus = "FAILED";
+            }
+        }
+        bookingRepository.cancel(id, refundId, refundStatus);
+    }
+
+    @Transactional
+    public void cancelAllByTripByDriver(int tripId) {
+        List<Booking> active = bookingRepository.findActiveByTrip(tripId);
+        for (Booking b : active) {
+            if ("SCHEDULED".equals(b.getStatus())) {
+                trajetRepository.increaseSeats(tripId, b.getSeatsBooked());
+            }
+            String refundId = null;
+            String refundStatus = "NONE";
+            if (b.getPaymentIntentId() != null && !b.getPaymentIntentId().isBlank()) {
+                try {
+                    Refund refund = paymentService.refund(b.getPaymentIntentId());
+                    refundId = refund.getId();
+                    refundStatus = "succeeded".equals(refund.getStatus()) ? "REFUNDED" : "PENDING";
+                } catch (Exception e) {
+                    refundStatus = "FAILED";
+                }
+            }
+            bookingRepository.cancelByDriver(b.getId(), refundId, refundStatus);
+        }
     }
 }

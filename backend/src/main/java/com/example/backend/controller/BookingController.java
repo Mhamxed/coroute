@@ -58,7 +58,13 @@ public class BookingController {
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<Void> cancel(@PathVariable int id) {
-        bookingService.cancel(id);
+        bookingService.cancelByPassenger(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trip/{tripId}/cancel-all")
+    public ResponseEntity<Void> cancelAllByDriver(@PathVariable int tripId) {
+        bookingService.cancelAllByTripByDriver(tripId);
         return ResponseEntity.noContent().build();
     }
 

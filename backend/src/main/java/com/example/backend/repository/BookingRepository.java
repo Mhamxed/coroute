@@ -28,6 +28,8 @@ public class BookingRepository {
         b.setSeatsBooked(rs.getInt("seats_booked"));
         b.setStatus(rs.getString("status"));
         try { b.setPaymentIntentId(rs.getString("payment_intent_id")); } catch (Exception ignored) {}
+        try { b.setRefundStatus(rs.getString("refund_status")); } catch (Exception ignored) {}
+        try { b.setRefundId(rs.getString("refund_id")); } catch (Exception ignored) {}
         if (rs.getTimestamp("booked_at") != null)
             b.setBookedAt(rs.getTimestamp("booked_at").toLocalDateTime());
         if (rs.getTimestamp("created_at") != null)
@@ -93,7 +95,9 @@ public class BookingRepository {
                         "FROM bookings b " +
                         "JOIN users u ON b.passenger_id = u.id " +
                         "JOIN trips t ON b.trip_id = t.id " +
-                        "WHERE b.trip_id = ? ORDER BY b.booked_at DESC",
+                        "WHERE b.trip_id = ? " +
+                        "AND b.status IN ('WAITING', 'SCHEDULED', 'DECLINED') " +
+                        "ORDER BY b.booked_at DESC",
                 mapper, tripId);
     }
 
@@ -105,13 +109,34 @@ public class BookingRepository {
         jdbc.update("UPDATE bookings SET status = 'DECLINED' WHERE id = ?", id);
     }
 
-    public void cancel(int id) {
-        jdbc.update("DELETE FROM bookings WHERE id = ?", id);
+    public void cancel(int id, String refundId, String refundStatus) {
+        jdbc.update(
+                "UPDATE bookings SET status = 'CANCELLED', refund_id = ?, refund_status = ? WHERE id = ?",
+                refundId, refundStatus, id);
+    }
+
+    public void cancelByDriver(int id, String refundId, String refundStatus) {
+        jdbc.update(
+                "UPDATE bookings SET status = 'CANCELLED_BY_DRIVER', refund_id = ?, refund_status = ? WHERE id = ?",
+                refundId, refundStatus, id);
+    }
+
+    public List<Booking> findActiveByTrip(int tripId) {
+        return jdbc.query(
+                "SELECT b.*, u.first_name, u.last_name, u.email, " +
+                        "t.origin_city, t.destination_city, t.departure_time AS trip_departure_time, " +
+                        "t.price_per_seat, t.status AS trip_status " +
+                        "FROM bookings b " +
+                        "JOIN users u ON b.passenger_id = u.id " +
+                        "JOIN trips t ON b.trip_id = t.id " +
+                        "WHERE b.trip_id = ? AND b.status IN ('WAITING','SCHEDULED')",
+                mapper, tripId);
     }
 
     public boolean existsByPassengerAndTrip(int passengerId, int tripId) {
         Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM bookings WHERE passenger_id = ? AND trip_id = ? AND status != 'DECLINED'",
+                "SELECT COUNT(*) FROM bookings WHERE passenger_id = ? AND trip_id = ? " +
+                        "AND status NOT IN ('DECLINED', 'CANCELLED', 'CANCELLED_BY_DRIVER')",
                 Integer.class, passengerId, tripId);
         return count != null && count > 0;
     }
