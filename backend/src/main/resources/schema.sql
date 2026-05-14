@@ -1,6 +1,4 @@
--- =========================
--- USERS (base table)
--- =========================
+
 CREATE TABLE users (
     id INT IDENTITY PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -14,9 +12,6 @@ CREATE TABLE users (
     created_at DATETIME2 DEFAULT GETDATE()
 );
 
--- =========================
--- VEHICLES
--- =========================
 CREATE TABLE vehicles (
     plate_number VARCHAR(50) PRIMARY KEY,
     model VARCHAR(100),
@@ -24,18 +19,14 @@ CREATE TABLE vehicles (
     created_at DATETIME2 DEFAULT GETDATE()
 );
 
--- =========================
--- PASSENGERS (inherits users)
--- =========================
+
 CREATE TABLE passengers (
     id INT PRIMARY KEY,
     is_verified BIT DEFAULT 0,
     CONSTRAINT fk_passenger_user FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- =========================
--- DRIVERS (inherits users)
--- =========================
+
 CREATE TABLE drivers (
     id INT PRIMARY KEY,
     is_verified BIT DEFAULT 0,
@@ -46,17 +37,13 @@ CREATE TABLE drivers (
     CONSTRAINT fk_driver_vehicle FOREIGN KEY (vehicle_plate) REFERENCES vehicles(plate_number)
 );
 
--- =========================
--- ADMINS (inherits users)
--- =========================
+
 CREATE TABLE admins (
     id INT PRIMARY KEY,
     CONSTRAINT fk_admin_user FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- =========================
--- TRIPS
--- =========================
+
 CREATE TABLE trips (
     id INT IDENTITY PRIMARY KEY,
     driver_id INT NOT NULL,
@@ -78,13 +65,11 @@ CREATE TABLE trips (
 
     CONSTRAINT fk_trip_driver FOREIGN KEY (driver_id) REFERENCES drivers(id),
 
-    -- prevent inconsistent seat values
+ 
     CONSTRAINT chk_seats CHECK (available_seats <= total_seats)
 );
 
--- =========================
--- BOOKINGS
--- =========================
+
 CREATE TABLE bookings (
     id INT IDENTITY PRIMARY KEY,
     trip_id INT NOT NULL,
@@ -102,9 +87,6 @@ CREATE TABLE bookings (
     CONSTRAINT fk_booking_passenger FOREIGN KEY (passenger_id) REFERENCES passengers(id)
 );
 
--- =========================
--- INDEXES (for performance)
--- =========================
 CREATE INDEX idx_trip_search 
 ON trips(origin_city, destination_city, departure_time);
 
